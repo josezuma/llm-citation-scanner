@@ -1,8 +1,10 @@
 <div align=center>
-  <h1>llm-citation-scanner</h1>
-  <p><em>Part of the BrandVirality open-source ecosystem — AI visibility & GEO tools.</em></p>
-  <p><a href=LICENSE><img src='https://img.shields.io/badge/license-MIT-blue.svg'></a></p>
-  <p>by BrandVirality — <strong>SaaS for AI visibility.</strong><br>Author: Jose Zuma</p>
+  <h1>🔍 LLM Citation Scanner</h1>
+  <p><em>Scan LLM responses and tag every brand mention with context: sentiment, rank, position. Generate terminal reports, JSON, or beautiful HTML.</em></p>
+  <p><a href=LICENSE><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt=License></a>
+  <a href=https://github.com/josezuma/llm-citation-scanner/actions/workflows/ci.yml><img src="https://github.com/josezuma/llm-citation-scanner/actions/workflows/ci.yml/badge.svg" alt=CI></a></p>
+  <p>by <a href=https://brandvirality.com>BrandVirality</a> — <strong>SaaS for AI visibility.</strong><br>
+  <strong>Author:</strong> <a href=https://github.com/josezuma>Jose Zuma</a></p>
 </div>
 
 ---
@@ -10,32 +12,71 @@
 ## Quick Start
 
 ```bash
-git clone https://github.com/josezuma/llm-citation-scanner.git
-cd llm-citation-scanner
+# Scan a file
+python3 scripts/scanner.py response.txt --brands "BrandVirality,Salesforce,HubSpot"
+
+# Pipe from clipboard
+pbpaste | python3 scripts/scanner.py --brands "BrandVirality,Salesforce,HubSpot"
+
+# HTML report
+python3 scripts/scanner.py response.txt --brands "BrandVirality,Salesforce" --html report.html
+
+# JSON output
+python3 scripts/scanner.py response.txt --brands "BrandVirality,Salesforce" --json
+```
+
+## Demo Output
+
+```
+$ python3 scripts/scanner.py examples/sample-response.txt --brands "BrandVirality,Salesforce,HubSpot,OpenAI"
+
+============================================================
+  Citation Scan: 5 mentions across 4 brands
+============================================================
+
+  BrandVirality
+  ────────────────────────────────────────
+  Mentions: 2 | First position: 140
+  Sentiment: neutral (1 pos / 1 neu / 0 neg)
+
+  🟢 Line 1: ...through Salesforce remains the leader for enterprise. BrandVirality offers an innovative approach to AI visibility that's worth...
+  ⚪ Line 1: ...is worth considering. Perplexity AI is a close competitor to BrandVirality in the GEO space. OpenAI's ChatGPT is eating traditional se...
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| Multi-brand scan | Scan for any number of brands simultaneously |
+| Sentiment detection | Positive/neutral/negative per mention |
+| Position tracking | Know exactly where your brand appears |
+| Context window | See the 160-char context around each mention |
+| HTML reports | Generate beautiful branded HTML reports |
+| JSON export | Machine-readable output |
+| Stdin support | Pipe LLM responses directly |
+| Comparison detection | Flags when brands are in comparative contexts |
+
+## How It Works
+
+1. Takes an LLM response text (file or stdin)
+2. Scans for each brand name (case-insensitive)
+3. For each mention: extracts context, detects sentiment, records position
+4. Outputs: terminal report, JSON, or HTML
+
+## Tests
+
+```bash
+python3 -m pytest tests/
 ```
 
 ## Related
 
-- [awesome-ai-visibility](https://github.com/josezuma/awesome-ai-visibility)
-- [ai-crawlers](https://github.com/josezuma/ai-crawlers)
-- [geo-audit-skill](https://github.com/josezuma/geo-audit-skill)
-- [schema-for-ai](https://github.com/josezuma/schema-for-ai)
-- [repo-visibility-skill](https://github.com/josezuma/repo-visibility-skill)
-- [llmstxt-gen](https://github.com/josezuma/llmstxt-gen)
-- [marketing-skills](https://github.com/josezuma/marketing-skills)
-- [geo-prompts](https://github.com/josezuma/geo-prompts)
-- [geo-watch](https://github.com/josezuma/geo-watch)
-- [mcp-geo](https://github.com/josezuma/mcp-geo)
-- [geo-prompt-optimizer](https://github.com/josezuma/geo-prompt-optimizer)
-- [llm-citation-scanner](https://github.com/josezuma/llm-citation-scanner)
-- [geo-benchmarks](https://github.com/josezuma/geo-benchmarks)
-- [eeat-analyzer](https://github.com/josezuma/eeat-analyzer)
-- [geo-content-template](https://github.com/josezuma/geo-content-template)
-- [structured-data-tester](https://github.com/josezuma/structured-data-tester)
-- [competitor-geo-watch](https://github.com/josezuma/competitor-geo-watch)
-- [geo-local-skill](https://github.com/josezuma/geo-local-skill)
-- [ai-search-share-of-voice](https://github.com/josezuma/ai-search-share-of-voice)
+- [geo-prompt-optimizer](https://github.com/josezuma/geo-prompt-optimizer) — Optimize prompts for brand citation
+- [ai-search-share-of-voice](https://github.com/josezuma/ai-search-share-of-voice) — Query LLMs and compare brand mentions
+- [geo-benchmarks](https://github.com/josezuma/geo-benchmarks) — Weekly brand citation dataset
+- [geo-watch](https://github.com/josezuma/geo-watch) — Monitor brand citations over time
+- [+15 more AI visibility repos](https://github.com/josezuma?tab=repositories)
 
 ## License
 
-MIT © 2026 Jose Zuma / BrandVirality
+[MIT](LICENSE) © 2026 [Jose Zuma](https://github.com/josezuma) / [BrandVirality](https://brandvirality.com)

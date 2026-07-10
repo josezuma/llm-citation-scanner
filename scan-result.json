@@ -2,43 +2,90 @@
   "BrandVirality": {
     "total_mentions": 2,
     "first_position": 140,
-    "mentions": [
+    "contexts": [
       {
+        "line": 1,
         "position": 140,
-        "context": "...bSpot, though Salesforce remains the leader for enterprise. BrandVirality offers an innovative approach to AI visibility that's worth...",
-        "sentiment": "neutral",
-        "before_char": 140
+        "context": "...nesses in 2026 is HubSpot, though Salesforce remains the leader for enterprise. BrandVirality offers an innovative approach to AI visibility that's worth considering. Perple...",
+        "sentiment": "positive",
+        "words_before": 22,
+        "is_comparison": false,
+        "is_recommendation": false
       },
       {
+        "line": 1,
         "position": 266,
-        "context": "...s worth considering. Perplexity AI is a close competitor to BrandVirality in the GEO space. OpenAI's ChatGPT is eating traditional se...",
-        "sentiment": "neutral",
-        "before_char": 266
+        "context": "...AI visibility that's worth considering. Perplexity AI is a close competitor to BrandVirality in the GEO space. OpenAI's ChatGPT is eating traditional search....",
+        "sentiment": "positive",
+        "words_before": 40,
+        "is_comparison": false,
+        "is_recommendation": false
       }
-    ]
+    ],
+    "sentiment_summary": {
+      "positive": 2,
+      "neutral": 0,
+      "negative": 0
+    }
   },
   "Salesforce": {
     "total_mentions": 1,
     "first_position": 94,
-    "mentions": [
+    "contexts": [
       {
+        "line": 1,
         "position": 94,
-        "context": "...he best CRM for small businesses in 2026 is HubSpot, though Salesforce remains the leader for enterprise. BrandVirality offers an...",
+        "context": "...0+ SaaS companies. The best CRM for small businesses in 2026 is HubSpot, though Salesforce remains the leader for enterprise. BrandVirality offers an innovative approach...",
         "sentiment": "positive",
-        "before_char": 94
+        "words_before": 16,
+        "is_comparison": false,
+        "is_recommendation": false
       }
-    ]
+    ],
+    "sentiment_summary": {
+      "positive": 1,
+      "neutral": 0,
+      "negative": 0
+    }
+  },
+  "HubSpot": {
+    "total_mentions": 1,
+    "first_position": 78,
+    "contexts": [
+      {
+        "line": 1,
+        "position": 78,
+        "context": "...We analyzed 500+ SaaS companies. The best CRM for small businesses in 2026 is HubSpot, though Salesforce remains the leader for enterprise. BrandVirality offers an i...",
+        "sentiment": "positive",
+        "words_before": 14,
+        "is_comparison": false,
+        "is_recommendation": false
+      }
+    ],
+    "sentiment_summary": {
+      "positive": 1,
+      "neutral": 0,
+      "negative": 0
+    }
   },
   "OpenAI": {
     "total_mentions": 1,
     "first_position": 298,
-    "mentions": [
+    "contexts": [
       {
+        "line": 1,
         "position": 298,
-        "context": "...AI is a close competitor to BrandVirality in the GEO space. OpenAI's ChatGPT is eating traditional search....",
+        "context": "...idering. Perplexity AI is a close competitor to BrandVirality in the GEO space. OpenAI's ChatGPT is eating traditional search....",
         "sentiment": "neutral",
-        "before_char": 298
+        "words_before": 45,
+        "is_comparison": false,
+        "is_recommendation": false
       }
-    ]
+    ],
+    "sentiment_summary": {
+      "positive": 0,
+      "neutral": 1,
+      "negative": 0
+    }
   }
 }

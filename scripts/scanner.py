@@ -1,59 +1,170 @@
 #!/usr/bin/env python3
-"""Scan an LLM response for brand mentions with context."""
+"""LLM Citation Scanner — Scan LLM responses and tag every brand mention with context, sentiment, rank."""
 
-import sys, json, re
-from collections import defaultdict
+import sys, json, re, os, argparse
+from typing import List, Dict
 
-def scan(text, brands):
-    results = {}
-    for brand in brands:
-        brand_clean = brand.strip()
-        matches = list(re.finditer(re.escape(brand_clean), text, re.IGNORECASE))
-        mentions = []
-        for m in matches:
-            start = max(0, m.start() - 60)
-            end = min(len(text), m.end() + 60)
-            context = text[start:end].replace('\n', ' ')
+class CitationScanner:
+    def __init__(self, brands: List[str]):
+        self.brands = [b.strip() for b in brands]
+        self.positive_words = ['best','great','recommended','top','leading','excellent','powerful',
+                                'innovative','superior','number one','market leader','fastest','highest']
+        self.negative_words = ['worst','expensive','limited','bad','poor','avoid','outdated',
+                                'slow','terrible','overpriced','inferior','worst']
+
+    def scan(self, text: str) -> Dict:
+        results = {}
+        lines = text.split('\n')
+        
+        for brand in self.brands:
+            mentions = []
+            pattern = re.compile(re.escape(brand), re.IGNORECASE)
             
-            # Sentiment
-            before = text[max(0, m.start()-100):m.start()].lower()
-            positive = ['best','great','recommended','top','leading','excellent','powerful']
-            negative = ['worst','expensive','limited','bad','poor','avoid','outdated']
-            sentiment = "neutral"
-            if any(w in before for w in positive):
-                sentiment = "positive"
-            elif any(w in before for w in negative):
-                sentiment = "negative"
+            for line_idx, line in enumerate(lines):
+                for match in pattern.finditer(line):
+                    start = max(0, match.start() - 80)
+                    end = min(len(line), match.end() + 80)
+                    context = line[start:end].strip()
+                    
+                    # Sentiment
+                    before = line[max(0, match.start()-120):match.start()].lower()
+                    after = line[match.end():min(len(line), match.end()+120)].lower()
+                    sentiment = self._detect_sentiment(before + " " + after)
+                    
+                    # Rank in line
+                    words_before = len(line[:match.start()].split())
+                    
+                    # Is it a main subject or comparative?
+                    is_comparison = any(w in before for w in ['vs','versus','compared','compared to','versus','rather than'])
+                    is_recommendation = any(w in before for w in ['recommend','choose','pick','use','try','suggest'])
+                    
+                    mentions.append({
+                        "line": line_idx + 1,
+                        "position": match.start(),
+                        "context": f"...{context}...",
+                        "sentiment": sentiment,
+                        "words_before": words_before,
+                        "is_comparison": is_comparison,
+                        "is_recommendation": is_recommendation,
+                    })
             
-            mentions.append({
-                "position": m.start(),
-                "context": f"...{context.strip()}...",
-                "sentiment": sentiment,
-                "before_char": m.start(),
-            })
-        if mentions:
-            results[brand_clean] = {
-                "total_mentions": len(mentions),
-                "first_position": mentions[0]["position"],
-                "mentions": mentions[:5],
-            }
-    return results
+            if mentions:
+                first_pos = min(m["position"] for m in mentions)
+                results[brand] = {
+                    "total_mentions": len(mentions),
+                    "first_position": first_pos,
+                    "contexts": mentions[:10],
+                    "sentiment_summary": self._summarize_sentiment(mentions),
+                }
+        
+        return results
+
+    def _detect_sentiment(self, text: str) -> str:
+        if any(w in text for w in self.positive_words):
+            return "positive"
+        if any(w in text for w in self.negative_words):
+            return "negative"
+        return "neutral"
+
+    def _summarize_sentiment(self, mentions: List[Dict]) -> Dict:
+        counts = {"positive": 0, "neutral": 0, "negative": 0}
+        for m in mentions:
+            counts[m["sentiment"]] = counts.get(m["sentiment"], 0) + 1
+        return counts
+
+
+def generate_html(results: Dict, output_path: str):
+    """Generate a beautiful HTML report."""
+    rows = []
+    for brand, data in sorted(results.items(), key=lambda x: x[1]["first_position"]):
+        sentiment_colors = {"positive": "green", "neutral": "gray", "negative": "red"}
+        sent = data["sentiment_summary"]
+        total = data["total_mentions"]
+        
+        rows.append(f"""
+        <tr>
+            <td><strong>{brand}</strong></td>
+            <td>{total}</td>
+            <td style="color:{sentiment_colors.get(max(sent, key=sent.get), 'gray')}">{max(sent, key=sent.get)}</td>
+            <td>#{data['first_position']}</td>
+            <td><small>{data['contexts'][0]['context'][:100]}...</small></td>
+        </tr>""")
+    
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Citation Scan Report</title>
+<style>body{{font-family:-apple-system,sans-serif;max-width:960px;margin:auto;padding:2em}}
+table{{width:100%;border-collapse:collapse}} th,td{{padding:8px 12px;text-align:left;border-bottom:1px solid #ddd}}
+th{{background:#f5f5f5}} tr:hover{{background:#f0f0f0}}
+h1{{color:#333}} .summary{{background:#f9f9f9;padding:1em;border-radius:8px;margin:1em 0}}</style></head>
+<body>
+<h1>🔍 Citation Scan Report</h1>
+<div class=summary><strong>{len(results)} brands found</strong> in this response</div>
+<table><thead><tr><th>Brand</th><th>Mentions</th><th>Sentiment</th><th>First Position</th><th>First Context</th></tr></thead>
+<tbody>{"".join(rows)}</tbody></table>
+<p><small>Generated by <a href="https://github.com/josezuma/llm-citation-scanner">llm-citation-scanner</a></small></p>
+</body></html>"""
+    
+    with open(output_path, 'w') as f:
+        f.write(html)
+    print(f"HTML report: {output_path}")
+
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python scanner.py <response_file> --brands Brand1,Brand2")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Scan LLM responses for brand mentions with context")
+    parser.add_argument("input", nargs="?", help="Input file (or stdin)")
+    parser.add_argument("--brands", required=True, help="Comma-separated brand names to scan for")
+    parser.add_argument("--json", action="store_true", help="Output raw JSON")
+    parser.add_argument("--html", help="Generate HTML report at path")
+    parser.add_argument("--threshold", type=int, default=0, help="Minimum mentions to include")
+    args = parser.parse_args()
     
-    with open(sys.argv[1]) as f:
-        text = f.read()
+    if args.input:
+        with open(args.input) as f:
+            text = f.read()
+    else:
+        text = sys.stdin.read()
     
-    brands = [b.strip() for b in sys.argv[sys.argv.index("--brands")+1].split(",")]
-    results = scan(text, brands)
+    brands = [b.strip() for b in args.brands.split(",")]
+    scanner = CitationScanner(brands)
+    results = scanner.scan(text)
     
-    print(json.dumps(results, indent=2))
-    with open("scan-result.json", "w") as f:
-        json.dump(results, f, indent=2)
-    print(f"\nScanned {len(text)} chars, {len(results)} brands found")
+    if not results:
+        print("No brand mentions found.")
+        return
+    
+    if args.json or args.html:
+        json_path = "scan-result.json"
+        with open(json_path, 'w') as f:
+            json.dump(results, f, indent=2)
+        print(f"JSON: {json_path}")
+    
+    if args.html:
+        generate_html(results, args.html)
+        return
+    
+    if args.json:
+        print(json.dumps(results, indent=2))
+        return
+    
+    # Terminal report
+    print(f"\n{'='*60}")
+    print(f"  Citation Scan: {sum(d['total_mentions'] for d in results.values())} mentions across {len(results)} brands")
+    print(f"{'='*60}\n")
+    
+    for brand, data in sorted(results.items(), key=lambda x: x[1]["first_position"]):
+        print(f"  {brand}")
+        print(f"  {'─' * 40}")
+        print(f"  Mentions: {data['total_mentions']} | First position: {data['first_position']}")
+        
+        sent = data["sentiment_summary"]
+        dominant = max(sent, key=sent.get)
+        print(f"  Sentiment: {dominant} ({sent.get('positive',0)} pos / {sent.get('neutral',0)} neu / {sent.get('negative',0)} neg)")
+        print()
+        for m in data["contexts"][:3]:
+            sentiment_icon = {"positive": "🟢", "neutral": "⚪", "negative": "🔴"}
+            print(f"  {sentiment_icon.get(m['sentiment'], '⚪')} Line {m['line']}: {m['context'][:100]}...")
+        print()
+
 
 if __name__ == "__main__":
     main()
