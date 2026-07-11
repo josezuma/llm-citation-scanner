@@ -1,7 +1,10 @@
 # FAQ
 
-## What counts as a brand mention?
-Any occurrence of a brand name in text, case-insensitive.
+## What is llm-citation-scanner?
+Llm Citation Scanner
 
-## Does it detect misspellings?
-Not yet — only exact matches. Fuzzy matching planned.
+## Dependencies?
+Python stdlib only.
+
+## Author
+Jose Zuma
